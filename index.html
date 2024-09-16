@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realtime Dashboard - ยอดขายตามประเภทสินค้า</title>
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .charts-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+        .chart-wrapper {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin: 10px;
+            width: 45%;
+            min-width: 300px;
+        }
+        #errorMessage {
+            color: red;
+            font-weight: bold;
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="charts-container">
+        <div class="chart-wrapper">
+            <canvas id="barChart"></canvas>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="pieChart"></canvas>
+        </div>
+    </div>
+    <div id="errorMessage"></div>
+
+    <script>
+        let barChart, pieChart;
+
+        function getRandomSales(min, max) {
+            return Math.floor(Math.random() * (max - min + 1) + min) * 1000000;
+        }
+
+        function updateDashboard() {
+            const data = {
+                car: getRandomSales(10, 50),
+                house: getRandomSales(20, 100),
+                plane: getRandomSales(100, 500),
+                boat: getRandomSales(30, 150)
+            };
+
+            data.total = data.car + data.house + data.plane + data.boat;
+
+            updateCharts(data);
+            $('#errorMessage').text('');
+
+            setTimeout(updateDashboard, 5000);
+        }
+
+        function initCharts() {
+            const barCtx = document.getElementById('barChart').getContext('2d');
+            barChart = new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['รถ', 'บ้าน', 'เครื่องบิน', 'เรือ'],
+                    datasets: [{
+                        label: 'ยอดขาย (ล้านบาท)',
+                        data: [0, 0, 0, 0],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.5)',
+                            'rgba(54, 162, 235, 0.5)',
+                            'rgba(255, 206, 86, 0.5)',
+                            'rgba(75, 192, 192, 0.5)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '฿' + value.toLocaleString() + 'M';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const pieCtx = document.getElementById('pieChart').getContext('2d');
+            pieChart = new Chart(pieCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['รถ', 'บ้าน', 'เครื่องบิน', 'เรือ'],
+                    datasets: [{
+                        data: [0, 0, 0, 0],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(54, 162, 235, 0.8)',
+                            'rgba(255, 206, 86, 0.8)',
+                            'rgba(75, 192, 192, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'สัดส่วนยอดขายตามประเภทสินค้า'
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateCharts(data) {
+            const salesData = [
+                data.car / 1000000,
+                data.house / 1000000,
+                data.plane / 1000000,
+                data.boat / 1000000
+            ];
+
+            barChart.data.datasets[0].data = salesData;
+            barChart.update();
+
+            pieChart.data.datasets[0].data = salesData;
+            pieChart.update();
+        }
+
+        $(document).ready(function() {
+            if (typeof jQuery == 'undefined') {
+                console.error("jQuery is not loaded");
+                $('#errorMessage').text('เกิดข้อผิดพลาด: ไม่สามารถโหลด jQuery ได้');
+            } else {
+                console.log("jQuery version: " + jQuery.fn.jquery);
+                initCharts();
+                updateDashboard();
+            }
+        });
+    </script>
+</body>
+</html>
